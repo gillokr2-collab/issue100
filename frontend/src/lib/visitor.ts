@@ -1,0 +1,2 @@
+export function visitorId(){if(typeof document==="undefined")return"";const existing=document.cookie.match(/(?:^|; )visitorId=([^;]+)/)?.[1];if(existing)return decodeURIComponent(existing);const id=crypto.randomUUID();document.cookie=`visitorId=${encodeURIComponent(id)}; Max-Age=31536000; Path=/; SameSite=Lax`;return id;}
+export function sessionId(){const key="issue100-session";const existing=sessionStorage.getItem(key);if(existing)return existing;const id=crypto.randomUUID();sessionStorage.setItem(key,id);return id;}

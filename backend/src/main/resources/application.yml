@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: issue100-api
+  profiles:
+    default: local
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/issue100}
+    username: ${DB_USERNAME:issue100}
+    password: ${DB_PASSWORD:issue100}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: Asia/Seoul
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+server:
+  port: ${SERVER_PORT:8080}
+  timezone: Asia/Seoul
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+news:
+  rss:
+    urls: ${NEWS_RSS_URLS:https://world.kbs.co.kr/rss/rss_news.htm?lang=k,https://world.kbs.co.kr/rss/rss_enternews.htm?lang=k}

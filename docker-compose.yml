@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-issue100}
+      POSTGRES_USER: ${POSTGRES_USER:-issue100}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-issue100}
+      TZ: Asia/Seoul
+    ports: ["5432:5432"]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-issue100}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    ports: ["6379:6379"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  backend:
+    build: { context: ., dockerfile: infrastructure/backend.Dockerfile }
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-issue100}
+      DB_USERNAME: ${POSTGRES_USER:-issue100}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-issue100}
+      REDIS_HOST: redis
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      NEWS_RSS_URLS: ${NEWS_RSS_URLS:-https://world.kbs.co.kr/rss/rss_news.htm?lang=k,https://world.kbs.co.kr/rss/rss_enternews.htm?lang=k}
+    ports: ["8080:8080"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+      INTERNAL_API_BASE_URL: http://backend:8080
+    ports: ["3000:3000"]
+    depends_on: [backend]
+volumes:
+  postgres_data:
+  redis_data:

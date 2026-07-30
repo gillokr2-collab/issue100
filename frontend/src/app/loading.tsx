@@ -1,0 +1,1 @@
+export default function Loading(){return <main className="shell"><header className="header"><div className="logo"><b>100</b>이슈100</div></header><div className="skeleton hero"/>{Array.from({length:6},(_,i)=><div className="skeleton card" key={i}/>)}</main>;}

@@ -1,0 +1,4 @@
+import Link from "next/link";
+import type { Issue } from "@/types";
+const move={UP:"▲",DOWN:"▼",SAME:"―",NEW:"NEW"};
+export function IssueCard({issue}:{issue:Issue}){return <Link className="issue-card" href={`/issues/${issue.id}`}><div className="rank"><b>{issue.rank}</b><span className={issue.rankStatus.toLowerCase()}>{move[issue.rankStatus]}{issue.rankStatus!=="NEW"&&issue.rankStatus!=="SAME"?Math.abs(issue.previousRank-issue.rank):""}</span></div><div><div className="eyebrow"><span>{issue.category}</span>{issue.rankStatus==="NEW"&&<em>NEW</em>}{issue.articleVelocity>140&&<em className="hot">HOT</em>}</div><h2>{issue.title}</h2><p>{issue.aiSummary}</p><footer><strong>관심도 {issue.interestScore}</strong><span>기사 {issue.articleCount}건</span><span>언론사 {issue.publisherCount}곳</span><time>{new Intl.RelativeTimeFormat("ko",{numeric:"auto"}).format(-Math.max(1,Math.round((Date.now()-new Date(issue.updatedAt).getTime())/60000)),"minute")}</time></footer></div></Link>;}
