@@ -1,4 +1,9 @@
 services:
+  - type: keyvalue
+    name: issue100-cache
+    plan: free
+    ipAllowList: []
+
   - type: web
     name: issue100-api
     runtime: docker
@@ -16,9 +21,15 @@ services:
       - key: DB_PASSWORD
         sync: false
       - key: REDIS_HOST
-        sync: false
+        fromService:
+          type: keyvalue
+          name: issue100-cache
+          property: host
       - key: REDIS_PORT
-        value: "6379"
+        fromService:
+          type: keyvalue
+          name: issue100-cache
+          property: port
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: YOUTUBE_API_KEY
