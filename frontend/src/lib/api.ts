@@ -1,4 +1,4 @@
-import type { Article, IssueDetail, RankingResponse, RankingType, SearchResponse, Timeline, Trend } from "@/types";
+import type { Article, IssueDetail, PopularVideosResponse, RankingResponse, RankingType, SearchResponse, Timeline, Trend } from "@/types";
 
 function apiBase(){
   return typeof window==="undefined"
@@ -17,13 +17,14 @@ async function request<T>(path:string,init?:RequestInit):Promise<T>{
 }
 
 export const api={
-  rankings:(type:RankingType,category?:string)=>request<RankingResponse>(
-    `/api/v1/issues/rankings?type=${type}${category?`&category=${encodeURIComponent(category)}`:""}`
+  rankings:(type:RankingType,category?:string,offset=0,limit=20)=>request<RankingResponse>(
+    `/api/v1/issues/rankings?type=${type}&offset=${offset}&limit=${limit}${category?`&category=${encodeURIComponent(category)}`:""}`
   ),
   trends:()=>request<{items:Trend[]}>(`/api/v1/search/rankings/realtime`),
   detail:(id:number)=>request<IssueDetail>(`/api/v1/issues/${id}`),
   articles:(id:number)=>request<Article[]>(`/api/v1/issues/${id}/articles`),
   timeline:(id:number)=>request<Timeline[]>(`/api/v1/issues/${id}/timeline`),
   search:(query:string)=>request<SearchResponse>(`/api/v1/search?query=${encodeURIComponent(query)}`),
+  popularVideos:()=>request<PopularVideosResponse>(`/api/v1/videos/popular`),
   post:(path:string,body:unknown)=>request(path,{method:"POST",body:JSON.stringify(body)})
 };

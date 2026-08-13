@@ -21,22 +21,27 @@ import org.w3c.dom.Element;
 
 @Component
 public class RssNewsProvider implements NewsProvider {
-    private final List<String> feedUrls;
+    private final List<Feed> feeds;
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
-    public RssNewsProvider(@Value("${news.rss.urls}") String urls) {
-        this.feedUrls = List.of(urls.split(",")).stream().map(String::trim).filter(s -> !s.isBlank()).toList();
+    public RssNewsProvider(@Value("${news.rss.urls}") String urls,
+            @Value("${community.rss.urls:}") String communityUrls) {
+        this.feeds = List.of((urls + ";" + communityUrls).split(";")).stream().map(String::trim).filter(s -> !s.isBlank())
+            .map(value -> {
+                String[] parts = value.split("\\|", 2);
+                return parts.length == 2 ? new Feed(parts[0].trim(), parts[1].trim()) : new Feed(host(value), value);
+            }).toList();
     }
 
     @Override
     public List<CollectedArticle> collectNews(NewsCollectionRequest request) {
         List<CollectedArticle> collected = new ArrayList<>();
         RuntimeException lastFailure = null;
-        for (String feedUrl : feedUrls) {
+        for (Feed feed : feeds) {
             try {
-                collected.addAll(readFeed(feedUrl));
+                collected.addAll(readFeed(feed));
             } catch (Exception exception) {
-                lastFailure = new IllegalStateException("RSS 수집 실패: " + feedUrl, exception);
+                lastFailure = new IllegalStateException("RSS 수집 실패: " + feed.url(), exception);
             }
         }
         List<CollectedArticle> result = collected.stream()
@@ -49,8 +54,8 @@ public class RssNewsProvider implements NewsProvider {
         return result;
     }
 
-    private List<CollectedArticle> readFeed(String feedUrl) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(feedUrl))
+    private List<CollectedArticle> readFeed(Feed feed) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(feed.url()))
             .header("User-Agent", "Issue100/0.1 (+RSS reader)")
             .timeout(java.time.Duration.ofSeconds(8))
             .GET().build();
@@ -72,10 +77,11 @@ public class RssNewsProvider implements NewsProvider {
             if (title.isBlank() || link.isBlank()) continue;
             String description = HtmlUtils.htmlUnescape(text(item, "description"))
                 .replaceAll("<[^>]+>", " ").replaceAll("\\s+", " ").trim();
+            String imageUrl = image(item);
             OffsetDateTime publishedAt = parseDate(text(item, "pubDate"));
             String id = text(item, "guid");
             if (id.isBlank()) id = link;
-            articles.add(new CollectedArticle(id, title, description, link, "KBS",
+            articles.add(new CollectedArticle(id, title, description, link, imageUrl, feed.publisher(),
                 publishedAt, "문화", sha256(title + "|" + link)));
         }
         return articles;
@@ -85,6 +91,27 @@ public class RssNewsProvider implements NewsProvider {
         var nodes = element.getElementsByTagName(tag);
         return nodes.getLength() == 0 ? "" : nodes.item(0).getTextContent().trim();
     }
+
+    private String image(Element item) {
+        for (String tag : List.of("media:content", "media:thumbnail", "enclosure")) {
+            var nodes = item.getElementsByTagName(tag);
+            if (nodes.getLength() > 0 && nodes.item(0) instanceof Element element) {
+                String url = element.getAttribute("url");
+                String type = element.getAttribute("type");
+                if (!url.isBlank() && (type.isBlank() || type.startsWith("image/"))) return url;
+            }
+        }
+        String raw = text(item, "description");
+        var matcher = java.util.regex.Pattern.compile("<img[^>]+src=[\\\"']([^\\\"']+)").matcher(raw);
+        return matcher.find() ? HtmlUtils.htmlUnescape(matcher.group(1)) : "";
+    }
+
+    private static String host(String value) {
+        try { return URI.create(value).getHost().replaceFirst("^www\\.", ""); }
+        catch (Exception ignored) { return "RSS"; }
+    }
+
+    private record Feed(String publisher, String url) {}
 
     private OffsetDateTime parseDate(String value) {
         if (value == null || value.isBlank()) return OffsetDateTime.now();

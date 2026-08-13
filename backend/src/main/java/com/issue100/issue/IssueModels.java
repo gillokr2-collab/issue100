@@ -14,14 +14,15 @@ public final class IssueModels {
         long id, int rank, int previousRank, RankStatus rankStatus, String category,
         String title, String aiSummary, double interestScore, int articleCount,
         int publisherCount, int pageViews, int uniqueViews, int outboundClicks,
-        int searchCount, int articleVelocity, OffsetDateTime updatedAt, List<String> tags) {}
+        int searchCount, int articleVelocity, OffsetDateTime updatedAt, String imageUrl,
+        String originalUrl, String publisher, String sourceType, List<String> tags) {}
 
     public record IssueDetail(
         IssueSummary issue, List<String> keyFacts, List<EntityItem> entities,
         List<Long> relatedIssueIds) {}
 
     public record ArticleItem(long id, long issueId, String publisher, String title,
-        String originalUrl, OffsetDateTime publishedAt, boolean officialSource) {}
+        String originalUrl, String imageUrl, OffsetDateTime publishedAt, boolean officialSource) {}
 
     public record TimelineItem(long id, long issueId, OffsetDateTime eventTime,
         String title, String description, int displayOrder) {}

@@ -39,11 +39,11 @@ public class IssueCatalogService {
         OffsetDateTime now = OffsetDateTime.now();
         List<CollectedArticle> collected;
         try {
-            collected = rss.collectNews(new NewsCollectionRequest(now.minusDays(7), 100));
+            collected = rss.collectNews(new NewsCollectionRequest(now.minusDays(7), 1000));
             log.info("KBS RSS 기사 {}건을 수집했습니다.", collected.size());
         } catch (RuntimeException failure) {
             log.warn("RSS 수집 실패로 Mock 데이터를 사용합니다: {}", failure.getMessage());
-            collected = mock.collectNews(new NewsCollectionRequest(now.minusDays(7), 100));
+            collected = mock.collectNews(new NewsCollectionRequest(now.minusDays(7), 1000));
         }
         AtomicLong id = new AtomicLong();
         for (CollectedArticle source : collected) {
@@ -53,9 +53,10 @@ public class IssueCatalogService {
                 source.primaryCategory(), source.title(),
                 source.description().isBlank() ? source.title() : source.description(),
                 score, 1, 1, 0, 0, 0, 0, 1, source.publishedAt(),
+                source.imageUrl(), source.originalUrl(), source.publisher(), sourceType(source.publisher()),
                 List.of(source.primaryCategory(), "RSS", source.publisher())));
             articles.add(new ArticleItem(issueId, issueId, source.publisher(), source.title(),
-                source.originalUrl(), source.publishedAt(), "KBS".equals(source.publisher())));
+                source.originalUrl(), source.imageUrl(), source.publishedAt(), !source.publisher().startsWith("Mock")));
             timelines.add(new TimelineItem(issueId, issueId, source.publishedAt(),
                 "기사 최초 보도", source.title(), 1));
         }
@@ -113,6 +114,12 @@ public class IssueCatalogService {
         return new IssueSummary(i.id(), rank, i.previousRank(), i.rankStatus(), i.category(),
             i.title(), i.aiSummary(), score, i.articleCount(), i.publisherCount(),
             i.pageViews(), i.uniqueViews(), i.outboundClicks(), i.searchCount(),
-            i.articleVelocity(), i.updatedAt(), i.tags());
+            i.articleVelocity(), i.updatedAt(), i.imageUrl(), i.originalUrl(),
+            i.publisher(), i.sourceType(), i.tags());
+    }
+    private String sourceType(String publisher) {
+        String value = publisher.toLowerCase();
+        return value.contains("\uBCF4\uBC30") || value.contains("\uCE74\uD398") || value.contains("\uCEE4\uBBA4\uB2C8\uD2F0") || value.contains("community")
+            ? "COMMUNITY" : "NEWS";
     }
 }

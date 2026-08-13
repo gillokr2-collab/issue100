@@ -20,6 +20,6 @@ public class MockNewsProvider implements NewsProvider {
 
     private CollectedArticle article(int id, String title, String category, OffsetDateTime publishedAt) {
         return new CollectedArticle("mock-" + id, title, title + " 관련 Mock 요약입니다.",
-            "", "Mock 데이터", publishedAt, category, "mock-hash-" + id);
+            "", "", "Mock 데이터", publishedAt, category, "mock-hash-" + id);
     }
 }

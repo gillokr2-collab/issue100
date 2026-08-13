@@ -30,6 +30,12 @@ management:
     web:
       exposure:
         include: health,info
+community:
+  rss:
+    urls: ${COMMUNITY_RSS_URLS:?????Reddit Korea|https://www.reddit.com/r/korea/.rss;?????Reddit K-pop|https://www.reddit.com/r/kpop/.rss;?????Hacker News|https://news.ycombinator.com/rss}
 news:
   rss:
-    urls: ${NEWS_RSS_URLS:https://world.kbs.co.kr/rss/rss_news.htm?lang=k,https://world.kbs.co.kr/rss/rss_enternews.htm?lang=k}
+    urls: ${NEWS_RSS_URLS:KBS|https://world.kbs.co.kr/rss/rss_news.htm?lang=k;KBS|https://world.kbs.co.kr/rss/rss_enternews.htm?lang=k;SBS|https://news.sbs.co.kr/news/newsflashRssFeed.do?plink=RSSREADER}
+youtube:
+  api-key: ${YOUTUBE_API_KEY:}
+  region: ${YOUTUBE_REGION:KR}

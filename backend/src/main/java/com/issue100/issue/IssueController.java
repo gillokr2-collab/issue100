@@ -14,9 +14,13 @@ public class IssueController {
     @GetMapping("/issues/rankings")
     RankingResponse rankings(
         @RequestParam(defaultValue = "REALTIME") RankingType type,
-        @RequestParam(required = false) String category) {
-        List<IssueSummary> items = catalog.rankings(type, category);
-        return new RankingResponse(items, items.size(), type, category, OffsetDateTime.now());
+        @RequestParam(required = false) String category,
+        @RequestParam(defaultValue = "0") int offset,
+        @RequestParam(defaultValue = "20") int limit) {
+        List<IssueSummary> all = catalog.rankings(type, category);
+        int from = Math.min(Math.max(0, offset), all.size());
+        int to = Math.min(from + Math.min(Math.max(1, limit), 50), all.size());
+        return new RankingResponse(all.subList(from, to), all.size(), type, category, OffsetDateTime.now());
     }
     @GetMapping("/issues/{issueId}") IssueDetail issue(@PathVariable long issueId) { return catalog.detail(issueId); }
     @GetMapping("/issues/{issueId}/articles") List<ArticleItem> articles(@PathVariable long issueId) { return catalog.articles(issueId); }

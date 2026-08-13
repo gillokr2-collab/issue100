@@ -8,6 +8,6 @@ public interface NewsProvider {
 
     record NewsCollectionRequest(OffsetDateTime since, int limit) {}
     record CollectedArticle(String externalArticleId, String title, String description,
-        String originalUrl, String publisher, OffsetDateTime publishedAt,
+        String originalUrl, String imageUrl, String publisher, OffsetDateTime publishedAt,
         String primaryCategory, String contentHash) {}
 }
